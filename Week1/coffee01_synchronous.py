@@ -1,4 +1,4 @@
-from time import sleep, ctime, time
+from time import sleep, ctime, time #
 
 # ฟังก์ชันจำลองการทำกาแฟให้ลูกค้า 1 คน
 def make_coffee(customer_name):
