@@ -1,6 +1,6 @@
 from time import sleep, ctime, time
 
-# Greeting Synchronous
+# Greeting synchronous
 def greet_diners(customer):
     print(f"{ctime()} Greeting for Customer-{customer} ...")
     sleep(1)
@@ -29,7 +29,6 @@ if __name__ == "__main__":
     customers = ['A', 'B', 'C']
 
     start_time = time()
-
     # Cooking for each customer
     for customer in customers:
         greet_diners(customer)
@@ -38,5 +37,4 @@ if __name__ == "__main__":
         mini_bar(customer)
 
     duration = time() - start_time
-
-    print(f"{ctime()} Finished Cooking in {duration} seconds")
+    print(f"{ctime()} Finished Cooking in {duration:0.2f} seconds.")

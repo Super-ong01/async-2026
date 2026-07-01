@@ -1,5 +1,5 @@
+import multiprocessing
 from time import sleep, ctime, time
-import threading
 
 # 1. ขั้นตอนต้อนรับหน้าร้าน ทำแบบ Synchronous เรียงทีละคน
 def greet_diners(customer):
@@ -7,56 +7,48 @@ def greet_diners(customer):
     sleep(1)
     print(f"{ctime()} Greeting for Customer-{customer} ...Done!")
 
-# 2. กระบวนการด้านหลังของลูกค้าแต่ละคน ที่จะถูกนำไปรันแยกในเธรดของตัวเอง
+# 2. กระบวนการย่อยของลูกค้าแต่ละคน ที่รอบนี้จะถูกนำไปรันแยกในโปรเซสของตัวเอง
 def customer_private_workflow(customer):
-    # Take Order
-    print(f"{ctime()} [Thread-{customer}] Taking Order ...")
+    # ในแต่ละ Process จะทำงาน 3 Tasks นี้
+    pid = multiprocessing.current_process().pid
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Taking Order ...")
     sleep(1)
-    print(f"{ctime()} [Thread-{customer}] Taking Order ...Done!")
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Taking Order ...Done!")
 
-    # Do Cooking
-    print(f"{ctime()} [Thread-{customer}] Cooking Spaghetti ...")
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Cooking Spaghetti ...")
     sleep(1)
-    print(f"{ctime()} [Thread-{customer}] Cooking Spaghetti ...Done!")
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Cooking Spaghetti ...Done!")
 
-    # Manage Bar
-    print(f"{ctime()} [Thread-{customer}] Manage Bar for Drink ...")
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Manage Bar for Drink ...")
     sleep(1)
-    print(f"{ctime()} [Thread-{customer}] Manage Bar for Drink ...Done!")
-    print(f"{ctime()} [Thread-{customer}] All served!\n")
-
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] Manage Bar for Drink ...Done!")
+    print(f"{ctime()}  [Process-{customer} (PID: {pid})] All served!\n")
 
 if __name__ == "__main__":
     customers = ['A', 'B', 'C']
     start_time = time()
 
-    # ----------------------------------------------------------
-    # PHASE 1: Greet ลูกค้าทีละคนแบบ Synchronous (เข้าใจชื่อก่อนลงสั่งงาน)
-    # ----------------------------------------------------------
-
+    # ----------------------------------------------------
+    # PHASE 1: Greet ลูกค้าทีละคนแบบ Synchronous ใน Main Process
+    # ----------------------------------------------------
     for customer in customers:
         greet_diners(customer)
 
-    print(f"\n{ctime()} === All customers greeted. Splitting into individual workflows ===\n")
+    print(f"\n{ctime()} --- All customers greeted. FORKING into independent Processes (Branch)! ---\n")
 
-    # ----------------------------------------------------------
-    # PHASE 2: แยกลูกค้าแต่ละคนไปทำกระบวนการหลังบ้านพร้อมกัน
-    # ----------------------------------------------------------
-
-    customer_threads = []
-
+    # ----------------------------------------------------
+    # PHASE 2: แตกโปรเซส (เปิดสาขาใหม่แยกขาดจากกันตามคอร์ซีพียู)
+    # ----------------------------------------------------
+    processes = []
     for customer in customers:
-        # สร้างเธรดแยกให้ลูกค้าแต่ละคน รันฟังก์ชันกระบวนการส่วนตัว
-        t = threading.Thread(
-            target=customer_private_workflow,
-            args=(customer,)
-        )
-        customer_threads.append(t)
-        t.start()      # เริ่มทำงานทันที
+        # เปลี่ยนจาก threading.Thread เป็น multiprocessing.Process
+        p = multiprocessing.Process(target=customer_private_workflow, args=(customer,))
+        processes.append(p)
+        p.start() # OS จะทำการโคลนทุกอย่างแล้วเตะไปรันบน CPU คอร์อื่น ๆ ขนานกันทันที
 
-    # รอให้ลูกค้าทุกคนทำกระบวนการเสร็จพร้อมกัน
-    for t in customer_threads:
-        t.join()
+    # รอให้ทุกโปรเซส (ทุกสาขา) ทำงานของตัวเองเสร็จสิ้นทั้งหมด
+    for p in processes:
+        p.join()
 
     duration = time() - start_time
-    print(f"{ctime()} Finished Entire Restaurant Operation in {duration} seconds")
+    print(f"{ctime()} Finished Entire Restaurant Operation in {duration:0.2f} seconds.")

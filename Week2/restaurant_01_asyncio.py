@@ -1,100 +1,54 @@
 import asyncio
-from time import ctime, time
+from time import time, ctime
 
-# Greeting Async
+# 1. ขั้นตอนต้อนรับหน้าร้าน ทำแบบ Synchronous เรียงทีละคน
 async def greet_diners(customer):
     print(f"{ctime()} Greeting for Customer-{customer} ...")
     await asyncio.sleep(1)
     print(f"{ctime()} Greeting for Customer-{customer} ...Done!")
 
-# Take Order
-async def take_orders(customer):
-    print(f"{ctime()} Taking Order for Customer-{customer} ...")
+# 2. กระบวนการส่วนตัวของลูกค้าแต่ละคน ที่จะถูกนำไปรันแยกใน Task ของตัวเอง
+async def customer_private_workflow(customer):
+    # Take Order
+    print(f"{ctime()}  [Task-{customer}] Taking Order ...")
     await asyncio.sleep(1)
-    print(f"{ctime()} Taking Order for Customer-{customer} ...Done!")
+    print(f"{ctime()}  [Task-{customer}] Taking Order ...Done!")
 
-# Do Cooking
-async def do_cooking(customer):
-    print(f"{ctime()} Cooking for Customer-{customer} ...")
+    # Do Cooking
+    print(f"{ctime()}  [Task-{customer}] Cooking Spaghetti ...")
     await asyncio.sleep(1)
-    print(f"{ctime()} Cooking for Customer-{customer} ...Done!")
+    print(f"{ctime()}  [Task-{customer}] Cooking Spaghetti ...Done!")
 
-# Mini Bar
-async def mini_bar(customer):
-    print(f"{ctime()} Mini Bar for Customer-{customer} ...")
+    # Manage Bar
+    print(f"{ctime()}  [Task-{customer}] Manage Bar for Drink ...")
     await asyncio.sleep(1)
-    print(f"{ctime()} Mini Bar for Customer-{customer} ...Done!")
-
-async def serve_customer(customer):
-    await take_orders(customer)
-    await do_cooking(customer)
-    await mini_bar(customer)
-    print(f"{ctime()} Customer-{customer} All served!")
+    print(f"{ctime()}  [Task-{customer}] Manage Bar for Drink ...Done!")
+    print(f"{ctime()}  [Task-{customer}] All served!\n")
 
 async def main():
+    start_time = time()
     customers = ['A', 'B', 'C']
 
-    start_time = time()
-
-    # Greeting ทีละคนก่อน
+    # ----------------------------------------------------
+    # PHASE 1: Greet diners sequentially
+    # ----------------------------------------------------
     for customer in customers:
         await greet_diners(customer)
 
-    print(f"{ctime()} --- All customers greeted. Scheduling Async Tasks! ---")
+    print(f"\n{ctime()} --- All customers greeted. Scheduling independent Async Tasks! ---\n")
 
-    # ให้ A, B, C ทำงานพร้อมกัน
+    # ----------------------------------------------------
+    # PHASE 2: Spawn tasks for concurrent phases
+    # ----------------------------------------------------
     tasks = []
-
     for customer in customers:
-        task = asyncio.create_task(serve_customer(customer))
+        task = asyncio.create_task(customer_private_workflow(customer))
         tasks.append(task)
 
     await asyncio.gather(*tasks)
 
     duration = time() - start_time
-    print(f"{ctime()} Finished Restaurant Operation in {duration:.2f} seconds")
+    print(f"{ctime()} Finished Cooking in {duration:0.2f} seconds.")
 
 if __name__ == "__main__":
     asyncio.run(main())
-# from time import sleep, ctime, time
-
-# # Greeting Synchronous
-# def greet_diners(customer):
-#     print(f"{ctime()} Greeting for Customer-{customer} ...")
-#     sleep(1)
-#     print(f"{ctime()} Greeting for Customer-{customer} ...Done!")
-
-# # Take Order
-# def take_orders(customer):
-#     print(f"{ctime()} Taking Order for Customer-{customer} ...")
-#     sleep(1)
-#     print(f"{ctime()} Taking Order for Customer-{customer} ...Done!")
-
-# # Do Cooking
-# def do_cooking(customer):
-#     print(f"{ctime()} Cooking for Customer-{customer} ...")
-#     sleep(1)
-#     print(f"{ctime()} Cooking for Customer-{customer} ...Done!")
-
-# # Do Cooking
-# def mini_bar(customer):
-#     print(f"{ctime()} Mini Bar for Customer-{customer} ...")
-#     sleep(1)
-#     print(f"{ctime()} Mini Bar for Customer-{customer} ...Done!")
-
-# if __name__ == "__main__":
-#     # Begin of main thread
-#     customers = ['A', 'B', 'C']
-
-#     start_time = time()
-
-#     # Cooking for each customer
-#     for customer in customers:
-#         greet_diners(customer)
-#         take_orders(customer)
-#         do_cooking(customer)
-#         mini_bar(customer)
-
-#     duration = time() - start_time
-
-#     print(f"{ctime()} Finished Cooking in {duration} seconds")
