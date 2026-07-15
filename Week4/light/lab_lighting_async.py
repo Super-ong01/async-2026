@@ -7,7 +7,7 @@ import httpx
 
 
 BASE_URL = "http://172.16.2.117:8088"
-STUDENT_ID = "6710301012"
+STUDENT_ID = "6710301004"
 
 LIGHTS = ["light_1", "light_2", "light_3", "light_4"]
 
