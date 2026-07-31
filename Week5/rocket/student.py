@@ -45,7 +45,7 @@ html_code = f"""
     <div class="info">
         <h2>Rocket Controller</h2>
         <div class="id-box">ID: {student_id}</div>
-        <p style="color: #94a3b8; font-size: 14px;">เชื่อมต่อไปยัง: ws://{server_ip}:8088/ws/{student_id}</p>
+        <p style="color: #94a3b8; font-size: 14px;">เชื่อมต่อไปยัง: ws://{server_ip}:8002/ws/{student_id}</p>
         <p>ใช้ปุ่มด้านล่าง หรือปุ่มลูกศร (← → ↑) บนคีย์บอร์ดเพื่อขับจรวด</p>
     </div>
 
@@ -58,8 +58,8 @@ html_code = f"""
 
 <script>
     const studentId = "{student_id}";
-    // เชื่อมต่อไปยัง Server หลัก (Port 8088)
-    const ws = new WebSocket(`ws://{server_ip}:8088/ws/${{studentId}}`);
+    // เชื่อมต่อไปยัง Server หลัก (Port 8002)
+    const ws = new WebSocket(`ws://{server_ip}:8002/ws/${{studentId}}`);
 
     function sendControl(action) {{
         if (ws.readyState === WebSocket.OPEN) {{
