@@ -1,0 +1,106 @@
+# อธิบาย: นำเข้า webbrowser เพื่อเปิดหน้าเว็บใน Browser อัตโนมัติจาก Python
+import webbrowser
+# อธิบาย: นำเข้า uvicorn ซึ่งเป็น ASGI Server สำหรับรัน FastAPI
+import uvicorn
+# อธิบาย: นำเข้า FastAPI สำหรับสร้าง Web API/Application
+from fastapi import FastAPI
+# อธิบาย: นำเข้า HTMLResponse เพื่อส่ง HTML กลับไปยัง Browser
+from fastapi.responses import HTMLResponse
+
+# 1. รับค่ารหัสนักศึกษา และ IP ของ Server จาก Terminal
+# อธิบาย: รับค่าจากผู้ใช้ทาง Terminal แล้วเก็บไว้ในตัวแปร student_id
+student_id = input("กรุณากรอกรหัสนักศึกษา (หรือชื่อจรวด): ").strip() or "Rocket_101"
+# อธิบาย: รับค่าจากผู้ใช้ทาง Terminal แล้วเก็บไว้ในตัวแปร server_ip
+server_ip = input("กรุณากรอก IP ของ Server (กด Enter หากเป็น localhost): ").strip() or "localhost"
+
+# อธิบาย: สร้างออบเจ็กต์ FastAPI และกำหนดข้อมูลของ Application
+app = FastAPI(title=f"Rocket Controller - {student_id}")
+
+# 2. หน้าจอควบคุมจรวด (HTML + CSS + JavaScript)
+# อธิบาย: เริ่มสร้างข้อความหลายบรรทัดเก็บในตัวแปร html_code; ในไฟล์นี้ใช้สำหรับ HTML/JavaScript หรือคำอธิบาย
+html_code = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Controller - {student_id}</title>
+    <style>
+        body {{
+            background-color: #1e293b; color: white; font-family: sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0; user-select: none;
+        }}
+        .info {{
+            text-align: center; margin-bottom: 20px;
+        }}
+        .id-box {{
+            font-size: 24px; font-weight: bold; color: #38bdf8; background: #0f172a;
+            padding: 8px 20px; border-radius: 8px; border: 1px solid #334155; display: inline-block; margin-top: 10px;
+        }}
+        .controls {{ display: grid; grid-template-columns: repeat(3, 100px); gap: 15px; margin-top: 20px; }}
+        button {{
+            height: 80px; background: #3b82f6; border: none; border-radius: 12px;
+            color: white; font-size: 20px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px #1d4ed8; transition: all 0.1s;
+        }}
+        button:active {{ transform: translateY(4px); box-shadow: none; }}
+        .thrust {{ grid-column: span 3; background: #ef4444; box-shadow: 0 4px #b91c1c; font-size: 24px; }}
+    </style>
+</head>
+<body>
+
+    <div class="info">
+        <h2>Rocket Controller</h2>
+        <div class="id-box">ID: {student_id}</div>
+        <p style="color: #94a3b8; font-size: 14px;">เชื่อมต่อไปยัง: ws://{server_ip}:8002/ws/{student_id}</p>
+        <p>ใช้ปุ่มด้านล่าง หรือปุ่มลูกศร (← → ↑) บนคีย์บอร์ดเพื่อขับจรวด</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="sendControl('ROTATE_LEFT')">↺ Left</button>
+        <div></div>
+        <button onclick="sendControl('ROTATE_RIGHT')">Right ↻</button>
+        <button class="thrust" onclick="sendControl('THRUST')">🔥 THRUST 🔥</button>
+    </div>
+
+<script>
+    const studentId = "{student_id}";
+    // เชื่อมต่อไปยัง Server หลัก (Port 8002)
+    const ws = new WebSocket(`ws://{server_ip}:8002/ws/${{studentId}}`);
+
+    function sendControl(action) {{
+        if (ws.readyState === WebSocket.OPEN) {{
+            ws.send(JSON.stringify({{
+                type: 'CONTROL',
+                action: action
+            }}));
+        }}
+    }}
+
+    // รองรับการกดปุ่มบนคีย์บอร์ด (Arrow Keys)
+    window.addEventListener('keydown', (e) => {{
+        if (e.key === 'ArrowLeft') sendControl('ROTATE_LEFT');
+        if (e.key === 'ArrowRight') sendControl('ROTATE_RIGHT');
+        if (e.key === 'ArrowUp') sendControl('THRUST');
+    }});
+</script>
+</body>
+</html>
+"""
+
+# อธิบาย: ประกาศ HTTP GET Endpoint ของ FastAPI ตาม Path ที่กำหนด
+@app.get("/")
+# อธิบาย: ประกาศ Endpoint หน้าแรกสำหรับส่งหน้า HTML ไปยัง Browser
+async def get_index():
+    # อธิบาย: ส่ง HTML ที่เตรียมไว้กลับไปยัง Browser ด้วย HTMLResponse
+    return HTMLResponse(html_code)
+
+# อธิบาย: ตรวจสอบเงื่อนไขก่อนตัดสินใจทำงานในบล็อกนี้
+if __name__ == "__main__":
+    # เปิดเบราว์เซอร์ไปที่ Port 8001 อัตโนมัติ
+    # อธิบาย: สั่งเปิด URL ใน Browser ของเครื่องผู้ใช้
+    webbrowser.open("http://127.0.0.1:8002")
+    # รัน FastAPI Server บนเครื่องนักเรียน Port 8002
+    # อธิบาย: สั่งรัน FastAPI Application ด้วย Uvicorn ตาม Host และ Port ที่กำหนด
+    uvicorn.run(app, host="127.0.0.1", port=8002)
